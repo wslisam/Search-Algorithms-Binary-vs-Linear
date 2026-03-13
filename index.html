@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-TW">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,20 +8,30 @@
     <style>
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(10, minmax(0, 1fr));
-            gap: 4px;
+            grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
+            gap: 6px;
         }
         .cell {
             aspect-ratio: 1;
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 0.875rem;
-            border-radius: 0.25rem;
+            font-size: 1rem;
+            border-radius: 0.375rem;
             transition: all 0.3s ease;
+            position: relative;
+        }
+        .pointer {
+            position: absolute;
+            bottom: -18px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            color: #ef4444;
         }
         @media (max-width: 640px) {
-            .cell { font-size: 0.6rem; }
+            .cell { font-size: 0.875rem; }
+            .grid-container { grid-template-columns: repeat(8, minmax(0, 1fr)); }
         }
     </style>
 </head>
@@ -29,137 +39,147 @@
 
     <!-- Header -->
     <header class="bg-blue-600 text-white shadow-md py-4 px-6 flex justify-between items-center">
-        <h1 class="text-2xl font-bold" id="app-title">Search Algorithms: Binary vs Linear</h1>
+        <h1 class="text-2xl font-bold" id="app-title">搜尋演算法：二分搜尋 vs 線性搜尋</h1>
         <button id="lang-toggle" class="bg-white text-blue-600 px-3 py-1 rounded font-semibold hover:bg-blue-50 transition">
-            中文
+            English
         </button>
     </header>
 
     <!-- Main Content -->
-    <main class="flex-grow max-w-5xl mx-auto w-full p-6 space-y-8">
+    <main class="flex-grow max-w-6xl mx-auto w-full p-6 space-y-6">
         
         <!-- Explanations Section -->
-        <section class="bg-white rounded-xl shadow-sm p-6 space-y-4 border border-slate-200">
-            <h2 class="text-xl font-bold text-blue-700" id="theory-title">Understanding the Concepts</h2>
-            
+        <section class="bg-white rounded-xl shadow-sm p-5 border border-slate-200">
+            <h2 class="text-xl font-bold text-blue-700 mb-4" id="theory-title">概念理解</h2>
             <div class="grid md:grid-cols-2 gap-6">
-                <!-- Linear Search -->
                 <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                    <h3 class="font-bold text-lg mb-2 text-slate-700" id="linear-title">Linear Search</h3>
-                    <p class="text-sm mb-2" id="linear-how"><strong>How it works:</strong> It checks each element one by one from the beginning until it finds the target.</p>
-                    <p class="text-sm" id="linear-why"><strong>Why use it?</strong> It is simple and works on <em>any</em> list, even if the items are completely scrambled and unsorted. However, for large lists, it is very slow (like a turtle).</p>
+                    <h3 class="font-bold text-lg mb-2 text-slate-700" id="linear-title">線性搜尋 (Linear Search)</h3>
+                    <p class="text-sm text-slate-600" id="linear-desc">從第一個元素開始逐一檢查。適用於未排序的資料，但速度較慢。</p>
                 </div>
-                
-                <!-- Binary Search -->
                 <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
-                    <h3 class="font-bold text-lg mb-2 text-blue-800" id="binary-title">Binary Search</h3>
-                    <p class="text-sm mb-2" id="binary-how"><strong>How it works:</strong> It jumps to the middle of the list. If the target is smaller, it discards the right half. If larger, it discards the left half. It repeats this until found.</p>
-                    <p class="text-sm" id="binary-why"><strong>Why use it?</strong> It is incredibly fast because it eliminates half of the remaining possibilities in every step! <strong>But why must it be sorted?</strong> Because if the list isn't sorted, knowing the middle value doesn't tell you whether your target is to the left or right.</p>
+                    <h3 class="font-bold text-lg mb-2 text-blue-800" id="binary-title">二分搜尋 (Binary Search)</h3>
+                    <p class="text-sm text-slate-600" id="binary-desc">每次挑選中間值比較，直接淘汰一半的資料。速度極快，但資料必須先排序。</p>
                 </div>
             </div>
         </section>
 
         <!-- Interactive Race Section -->
         <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-            <h2 class="text-xl font-bold text-blue-700 mb-4" id="race-title">The Great Race: 1 to 100</h2>
-            
-            <div class="flex items-center space-x-4 mb-6">
-                <label for="target-input" class="font-semibold" id="target-label">Target Number (1-100):</label>
-                <input type="number" id="target-input" min="1" max="100" value="73" class="border border-slate-300 rounded px-3 py-1 w-24 text-center focus:outline-none focus:border-blue-500">
-                <button id="start-btn" class="bg-green-500 text-white px-4 py-2 rounded font-bold hover:bg-green-600 transition shadow-sm">
-                    Start Race
-                </button>
-                <button id="reset-btn" class="bg-slate-200 text-slate-700 px-4 py-2 rounded font-bold hover:bg-slate-300 transition shadow-sm">
-                    Reset
-                </button>
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
+                <h2 class="text-xl font-bold text-blue-700" id="race-title">大賽跑：1 到 31</h2>
+                
+                <div class="flex items-center space-x-3">
+                    <label for="target-input" class="font-semibold" id="target-label">目標數字 (1-31)：</label>
+                    <input type="number" id="target-input" min="1" max="31" value="23" class="border border-slate-300 rounded px-3 py-1 w-20 text-center focus:outline-none focus:border-blue-500 font-bold">
+                    <button id="start-btn" class="bg-green-500 text-white px-4 py-2 rounded font-bold hover:bg-green-600 transition shadow-sm">
+                        開始尋找
+                    </button>
+                    <button id="reset-btn" class="bg-slate-200 text-slate-700 px-4 py-2 rounded font-bold hover:bg-slate-300 transition shadow-sm">
+                        重置
+                    </button>
+                </div>
             </div>
 
-            <div class="space-y-8">
+            <!-- Side by Side Tracks -->
+            <div class="grid md:grid-cols-2 gap-8">
+                
                 <!-- Linear Search Track -->
-                <div>
+                <div class="flex flex-col">
                     <div class="flex justify-between items-end mb-2">
-                        <h3 class="font-bold text-slate-700" id="linear-track-title">Linear Search Track</h3>
-                        <span class="text-sm font-mono bg-slate-100 px-2 py-1 rounded" id="linear-steps">Steps: 0</span>
+                        <h3 class="font-bold text-slate-700 text-lg" id="linear-track-title">線性搜尋跑道</h3>
+                        <span class="text-sm font-mono bg-slate-100 px-2 py-1 rounded font-bold" id="linear-steps">步數: 0</span>
                     </div>
-                    <div id="linear-grid" class="grid-container bg-slate-100 p-2 rounded-lg border border-slate-200"></div>
+                    <div id="linear-grid" class="grid-container bg-slate-100 p-4 rounded-lg border border-slate-200 mb-3 pb-8"></div>
+                    <!-- Linear Status -->
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200 min-h-[60px] flex items-center justify-center text-center text-sm font-medium text-slate-600" id="linear-status">
+                        等待開始...
+                    </div>
                 </div>
 
                 <!-- Binary Search Track -->
-                <div>
+                <div class="flex flex-col">
                     <div class="flex justify-between items-end mb-2">
-                        <h3 class="font-bold text-blue-800" id="binary-track-title">Binary Search Track</h3>
-                        <span class="text-sm font-mono bg-blue-50 px-2 py-1 rounded" id="binary-steps">Steps: 0</span>
+                        <h3 class="font-bold text-blue-800 text-lg" id="binary-track-title">二分搜尋跑道</h3>
+                        <span class="text-sm font-mono bg-blue-50 px-2 py-1 rounded font-bold text-blue-700" id="binary-steps">步數: 0</span>
                     </div>
-                    <div id="binary-grid" class="grid-container bg-slate-100 p-2 rounded-lg border border-slate-200"></div>
+                    <div id="binary-grid" class="grid-container bg-slate-100 p-4 rounded-lg border border-slate-200 mb-3 pb-8"></div>
+                    <!-- Binary Status -->
+                    <div class="bg-blue-50 p-3 rounded border border-blue-200 min-h-[60px] flex items-center justify-center text-center text-sm font-medium text-blue-800" id="binary-status">
+                        等待開始...
+                    </div>
                 </div>
+
             </div>
         </section>
 
     </main>
 
-    <!-- Footer -->
-    <footer class="bg-slate-800 text-slate-400 text-center py-4 mt-auto">
-        <p>Created by Sam Li</p>
-    </footer>
-
     <script>
-        // --- State ---
-        let currentLang = 'en';
+        const MAX_NUM = 31;
+        let currentLang = 'zh';
         let isRacing = false;
         let linearTimer = null;
         let binaryTimer = null;
 
-        // --- Dictionary ---
         const dict = {
             en: {
                 appTitle: "Search Algorithms: Binary vs Linear",
                 langToggle: "中文",
                 theoryTitle: "Understanding the Concepts",
                 linearTitle: "Linear Search",
-                linearHow: "<strong>How it works:</strong> It checks each element one by one from the beginning until it finds the target.",
-                linearWhy: "<strong>Why use it?</strong> It is simple and works on <em>any</em> list, even if the items are completely scrambled and unsorted. However, for large lists, it is very slow (like a turtle).",
+                linearDesc: "Checks elements one by one from the start. Works on unsorted data, but is slower.",
                 binaryTitle: "Binary Search",
-                binaryHow: "<strong>How it works:</strong> It jumps to the middle of the list. If the target is smaller, it discards the right half. If larger, it discards the left half. It repeats this until found.",
-                binaryWhy: "<strong>Why use it?</strong> It is incredibly fast because it eliminates half of the remaining possibilities in every step! <strong>But why must it be sorted?</strong> Because if the list isn't sorted, knowing the middle value doesn't tell you whether your target is to the left or right.",
-                raceTitle: "The Great Race: 1 to 100",
-                targetLabel: "Target Number (1-100):",
+                binaryDesc: "Checks the middle value and eliminates half the data each time. Extremely fast, but requires sorted data.",
+                raceTitle: `The Great Race: 1 to ${MAX_NUM}`,
+                targetLabel: `Target (1-${MAX_NUM}):`,
                 startBtn: "Start Race",
                 resetBtn: "Reset",
-                linearTrackTitle: "Linear Search Track",
-                binaryTrackTitle: "Binary Search Track",
-                steps: "Steps: "
+                linearTrackTitle: "Linear Search",
+                binaryTrackTitle: "Binary Search",
+                steps: "Steps: ",
+                statusWait: "Waiting to start...",
+                linCheck: (curr) => `Checking if ${curr} is the target...`,
+                linFound: (curr) => `Found ${curr}!`,
+                binCalc: (l, r, m) => `Range is ${l}-${r}. Middle is ${m}.`,
+                binCheck: (m, t) => `${m} is not ${t}.`,
+                binElimLeft: (m) => `Target is larger. Eliminating ${m} and left side.`,
+                binElimRight: (m) => `Target is smaller. Eliminating ${m} and right side.`,
+                binFound: (m) => `Found ${m} at the middle!`
             },
             zh: {
                 appTitle: "搜尋演算法：二分搜尋 vs 線性搜尋",
                 langToggle: "English",
                 theoryTitle: "概念理解",
                 linearTitle: "線性搜尋 (Linear Search)",
-                linearHow: "<strong>運作原理：</strong> 從列表的第一個元素開始，逐一檢查每個元素，直到找到目標為止。",
-                linearWhy: "<strong>為什麼使用它？</strong> 它非常簡單，並且適用於<em>任何</em>列表，即使資料完全沒有排序。但是，對於大型列表來說，它非常緩慢（就像烏龜一樣）。",
+                linearDesc: "從第一個元素開始逐一檢查。適用於未排序的資料，但速度較慢。",
                 binaryTitle: "二分搜尋 (Binary Search)",
-                binaryHow: "<strong>運作原理：</strong> 直接跳到列表的中間。如果目標比較小，就淘汰右半部；如果比較大，就淘汰左半部。重複這個過程直到找到目標。",
-                binaryWhy: "<strong>為什麼使用它？</strong> 它的速度極快，因為每次都能淘汰掉剩餘一半的可能性！<strong>但為什麼必須先排序？</strong> 因為如果列表沒有排序，知道中間的值並不能告訴你目標到底在左邊還是右邊。",
-                raceTitle: "大賽跑：1 到 100",
-                targetLabel: "目標數字 (1-100)：",
+                binaryDesc: "每次挑選中間值比較，直接淘汰一半的資料。速度極快，但資料必須先排序。",
+                raceTitle: `大賽跑：1 到 ${MAX_NUM}`,
+                targetLabel: `目標數字 (1-${MAX_NUM})：`,
                 startBtn: "開始尋找",
                 resetBtn: "重置",
                 linearTrackTitle: "線性搜尋跑道",
                 binaryTrackTitle: "二分搜尋跑道",
-                steps: "步數： "
+                steps: "步數: ",
+                statusWait: "等待開始...",
+                linCheck: (curr) => `檢查 ${curr} 是否為目標...`,
+                linFound: (curr) => `找到 ${curr} 了！`,
+                binCalc: (l, r, m) => `目前範圍 ${l} 到 ${r}，中間值為 ${m}`,
+                binCheck: (m, t) => `${m} 不是 ${t}`,
+                binElimLeft: (m) => `目標比 ${m} 大，排除左半邊`,
+                binElimRight: (m) => `目標比 ${m} 小，排除右半邊`,
+                binFound: (m) => `在中間找到了 ${m}！`
             }
         };
 
-        // --- DOM Elements ---
         const els = {
             appTitle: document.getElementById('app-title'),
             langToggle: document.getElementById('lang-toggle'),
             theoryTitle: document.getElementById('theory-title'),
             linearTitle: document.getElementById('linear-title'),
-            linearHow: document.getElementById('linear-how'),
-            linearWhy: document.getElementById('linear-why'),
+            linearDesc: document.getElementById('linear-desc'),
             binaryTitle: document.getElementById('binary-title'),
-            binaryHow: document.getElementById('binary-how'),
-            binaryWhy: document.getElementById('binary-why'),
+            binaryDesc: document.getElementById('binary-desc'),
             raceTitle: document.getElementById('race-title'),
             targetLabel: document.getElementById('target-label'),
             startBtn: document.getElementById('start-btn'),
@@ -171,20 +191,19 @@
             targetInput: document.getElementById('target-input'),
             linearGrid: document.getElementById('linear-grid'),
             binaryGrid: document.getElementById('binary-grid'),
+            linearStatus: document.getElementById('linear-status'),
+            binaryStatus: document.getElementById('binary-status')
         };
 
-        // --- Functions ---
         function updateLanguage() {
             const t = dict[currentLang];
             els.appTitle.textContent = t.appTitle;
             els.langToggle.textContent = t.langToggle;
             els.theoryTitle.textContent = t.theoryTitle;
             els.linearTitle.textContent = t.linearTitle;
-            els.linearHow.innerHTML = t.linearHow;
-            els.linearWhy.innerHTML = t.linearWhy;
+            els.linearDesc.textContent = t.linearDesc;
             els.binaryTitle.textContent = t.binaryTitle;
-            els.binaryHow.innerHTML = t.binaryHow;
-            els.binaryWhy.innerHTML = t.binaryWhy;
+            els.binaryDesc.textContent = t.binaryDesc;
             els.raceTitle.textContent = t.raceTitle;
             els.targetLabel.textContent = t.targetLabel;
             els.startBtn.textContent = t.startBtn;
@@ -192,28 +211,42 @@
             els.linearTrackTitle.textContent = t.linearTrackTitle;
             els.binaryTrackTitle.textContent = t.binaryTrackTitle;
             
-            // Update steps text without resetting numbers if racing
-            const lSteps = els.linearSteps.textContent.split(': ')[1] || 0;
-            const bSteps = els.binarySteps.textContent.split(': ')[1] || 0;
-            els.linearSteps.textContent = t.steps + lSteps;
-            els.binarySteps.textContent = t.steps + bSteps;
+            if(!isRacing) {
+                els.linearStatus.textContent = t.statusWait;
+                els.binaryStatus.textContent = t.statusWait;
+                els.linearSteps.textContent = t.steps + "0";
+                els.binarySteps.textContent = t.steps + "0";
+            }
         }
 
         function createGrids() {
             els.linearGrid.innerHTML = '';
             els.binaryGrid.innerHTML = '';
-            for (let i = 1; i <= 100; i++) {
+            for (let i = 1; i <= MAX_NUM; i++) {
                 const lCell = document.createElement('div');
-                lCell.className = 'cell bg-white text-slate-600 border border-slate-200';
+                lCell.className = 'cell bg-white text-slate-600 border border-slate-300 font-semibold shadow-sm';
                 lCell.id = `l-${i}`;
                 lCell.textContent = i;
                 els.linearGrid.appendChild(lCell);
 
                 const bCell = document.createElement('div');
-                bCell.className = 'cell bg-white text-slate-600 border border-slate-200';
+                bCell.className = 'cell bg-white text-slate-600 border border-slate-300 font-semibold shadow-sm';
                 bCell.id = `b-${i}`;
                 bCell.textContent = i;
+                
+                // Pointer container for L, M, R
+                const pointer = document.createElement('div');
+                pointer.className = 'pointer';
+                pointer.id = `bp-${i}`;
+                bCell.appendChild(pointer);
+                
                 els.binaryGrid.appendChild(bCell);
+            }
+        }
+
+        function clearPointers() {
+            for (let i = 1; i <= MAX_NUM; i++) {
+                document.getElementById(`bp-${i}`).textContent = '';
             }
         }
 
@@ -227,20 +260,23 @@
             
             els.linearSteps.textContent = dict[currentLang].steps + "0";
             els.binarySteps.textContent = dict[currentLang].steps + "0";
+            els.linearStatus.textContent = dict[currentLang].statusWait;
+            els.binaryStatus.textContent = dict[currentLang].statusWait;
             
-            for (let i = 1; i <= 100; i++) {
+            for (let i = 1; i <= MAX_NUM; i++) {
                 const lCell = document.getElementById(`l-${i}`);
                 const bCell = document.getElementById(`b-${i}`);
-                lCell.className = 'cell bg-white text-slate-600 border border-slate-200';
-                bCell.className = 'cell bg-white text-slate-600 border border-slate-200';
+                lCell.className = 'cell bg-white text-slate-600 border border-slate-300 font-semibold shadow-sm';
+                bCell.className = 'cell bg-white text-slate-600 border border-slate-300 font-semibold shadow-sm';
             }
+            clearPointers();
         }
 
         function startRace() {
             if (isRacing) return;
             let target = parseInt(els.targetInput.value);
-            if (isNaN(target) || target < 1 || target > 100) {
-                alert(currentLang === 'en' ? "Please enter a valid number between 1 and 100." : "請輸入 1 到 100 之間的有效數字。");
+            if (isNaN(target) || target < 1 || target > MAX_NUM) {
+                alert(currentLang === 'en' ? `Please enter a number between 1 and ${MAX_NUM}.` : `請輸入 1 到 ${MAX_NUM} 之間的數字。`);
                 return;
             }
 
@@ -250,38 +286,43 @@
             els.startBtn.classList.add('opacity-50', 'cursor-not-allowed');
             els.targetInput.disabled = true;
 
-            // Linear Search Logic
+            const t = dict[currentLang];
+
+            // --- Linear Search Logic ---
             let lCurrent = 1;
             let lSteps = 0;
             linearTimer = setInterval(() => {
                 if (lCurrent > 1) {
                     const prev = document.getElementById(`l-${lCurrent - 1}`);
                     if (lCurrent - 1 !== target) {
-                        prev.classList.replace('bg-yellow-300', 'bg-slate-200');
-                        prev.classList.add('opacity-40');
+                        prev.classList.replace('bg-yellow-300', 'bg-slate-100');
+                        prev.classList.add('opacity-50');
                     }
                 }
 
                 lSteps++;
-                els.linearSteps.textContent = dict[currentLang].steps + lSteps;
+                els.linearSteps.textContent = t.steps + lSteps;
                 const currCell = document.getElementById(`l-${lCurrent}`);
                 
                 if (lCurrent === target) {
                     currCell.classList.replace('bg-white', 'bg-green-500');
                     currCell.classList.replace('text-slate-600', 'text-white');
-                    currCell.classList.add('font-bold', 'scale-110', 'shadow-md');
+                    currCell.classList.add('scale-110', 'shadow-md');
+                    els.linearStatus.textContent = t.linFound(lCurrent);
+                    els.linearStatus.classList.replace('text-slate-600', 'text-green-600');
                     clearInterval(linearTimer);
                 } else {
                     currCell.classList.replace('bg-white', 'bg-yellow-300');
+                    els.linearStatus.textContent = t.linCheck(lCurrent);
                     lCurrent++;
                 }
-            }, 100); // Fast but visible turtle
+            }, 300); // Slower linear search to read text
 
-            // Binary Search Logic
+            // --- Binary Search Logic ---
             let bLeft = 1;
-            let bRight = 100;
+            let bRight = MAX_NUM;
             let bSteps = 0;
-            let bState = 'calc'; // 'calc', 'check', 'eliminate'
+            let bState = 'calc'; // calc -> check -> eliminate
             let bMid = 0;
 
             binaryTimer = setInterval(() => {
@@ -290,52 +331,71 @@
                     return;
                 }
 
+                clearPointers();
+                if(bLeft <= MAX_NUM) document.getElementById(`bp-${bLeft}`).textContent = 'L';
+                if(bRight >= 1) {
+                    const rPtr = document.getElementById(`bp-${bRight}`);
+                    rPtr.textContent = rPtr.textContent ? rPtr.textContent + ',R' : 'R';
+                }
+
                 if (bState === 'calc') {
                     bSteps++;
-                    els.binarySteps.textContent = dict[currentLang].steps + bSteps;
+                    els.binarySteps.textContent = t.steps + bSteps;
                     bMid = Math.floor((bLeft + bRight) / 2);
+                    
+                    const mPtr = document.getElementById(`bp-${bMid}`);
+                    mPtr.textContent = mPtr.textContent ? mPtr.textContent + ',M' : 'M';
+                    mPtr.style.color = '#2563eb'; // Blue for mid
+
                     const midCell = document.getElementById(`b-${bMid}`);
                     midCell.classList.replace('bg-white', 'bg-blue-400');
                     midCell.classList.replace('text-slate-600', 'text-white');
-                    midCell.classList.add('scale-110', 'font-bold', 'shadow-md');
+                    midCell.classList.add('scale-110', 'shadow-md');
+                    
+                    els.binaryStatus.textContent = t.binCalc(bLeft, bRight, bMid);
                     bState = 'check';
                 } 
                 else if (bState === 'check') {
+                    const mPtr = document.getElementById(`bp-${bMid}`);
+                    mPtr.textContent = mPtr.textContent ? mPtr.textContent + ',M' : 'M';
+                    
                     const midCell = document.getElementById(`b-${bMid}`);
                     if (bMid === target) {
                         midCell.classList.replace('bg-blue-400', 'bg-green-500');
+                        els.binaryStatus.textContent = t.binFound(bMid);
+                        els.binaryStatus.classList.replace('text-blue-800', 'text-green-600');
                         clearInterval(binaryTimer);
                     } else {
+                        els.binaryStatus.textContent = t.binCheck(bMid, target);
                         bState = 'eliminate';
                     }
                 }
                 else if (bState === 'eliminate') {
                     const midCell = document.getElementById(`b-${bMid}`);
                     midCell.classList.remove('scale-110', 'shadow-md');
-                    midCell.classList.replace('bg-blue-400', 'bg-slate-300');
-                    midCell.classList.replace('text-white', 'text-slate-500');
+                    midCell.classList.replace('bg-blue-400', 'bg-slate-200');
+                    midCell.classList.replace('text-white', 'text-slate-400');
 
                     if (bMid < target) {
-                        // Eliminate left half
+                        els.binaryStatus.textContent = t.binElimLeft(bMid);
                         for (let i = bLeft; i <= bMid; i++) {
                             const c = document.getElementById(`b-${i}`);
-                            c.className = 'cell bg-slate-200 text-slate-400 border border-slate-200 opacity-30';
+                            c.className = 'cell bg-slate-100 text-slate-300 border border-slate-200 opacity-40';
                         }
                         bLeft = bMid + 1;
                     } else {
-                        // Eliminate right half
+                        els.binaryStatus.textContent = t.binElimRight(bMid);
                         for (let i = bMid; i <= bRight; i++) {
                             const c = document.getElementById(`b-${i}`);
-                            c.className = 'cell bg-slate-200 text-slate-400 border border-slate-200 opacity-30';
+                            c.className = 'cell bg-slate-100 text-slate-300 border border-slate-200 opacity-40';
                         }
                         bRight = bMid - 1;
                     }
                     bState = 'calc';
                 }
-            }, 800); // Slower interval to see the dramatic cuts
+            }, 1200); // 1.2 seconds per step to allow reading the status text
         }
 
-        // --- Event Listeners ---
         els.langToggle.addEventListener('click', () => {
             currentLang = currentLang === 'en' ? 'zh' : 'en';
             updateLanguage();
@@ -344,7 +404,6 @@
         els.startBtn.addEventListener('click', startRace);
         els.resetBtn.addEventListener('click', resetRace);
 
-        // --- Initialization ---
         createGrids();
         updateLanguage();
 
