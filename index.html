@@ -8,8 +8,8 @@
     <style>
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(35px, 1fr));
-            gap: 6px;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 8px;
         }
         .cell {
             aspect-ratio: 1;
@@ -17,21 +17,23 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 1rem;
+            font-size: 1.1rem;
             border-radius: 0.375rem;
             transition: all 0.3s ease;
             position: relative;
         }
-        .pointer {
+        .pointer-container {
             position: absolute;
-            bottom: -18px;
-            font-size: 0.7rem;
-            font-weight: bold;
-            color: #ef4444;
+            bottom: 2px;
+            display: flex;
+            gap: 2px;
+            font-size: 0.65rem;
+            font-weight: 800;
+            line-height: 1;
         }
         @media (max-width: 640px) {
-            .cell { font-size: 0.875rem; }
-            .grid-container { grid-template-columns: repeat(8, minmax(0, 1fr)); }
+            .cell { font-size: 0.9rem; }
+            .grid-container { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
         }
     </style>
 </head>
@@ -68,11 +70,15 @@
             <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <h2 class="text-xl font-bold text-blue-700" id="race-title">大賽跑：1 到 31</h2>
                 
-                <div class="flex items-center space-x-3">
+                <div class="flex flex-wrap items-center justify-center gap-3">
                     <label for="target-input" class="font-semibold" id="target-label">目標數字 (1-31)：</label>
                     <input type="number" id="target-input" min="1" max="31" value="23" class="border border-slate-300 rounded px-3 py-1 w-20 text-center focus:outline-none focus:border-blue-500 font-bold">
-                    <button id="start-btn" class="bg-green-500 text-white px-4 py-2 rounded font-bold hover:bg-green-600 transition shadow-sm">
-                        開始尋找
+                    
+                    <button id="start-btn" class="bg-green-500 text-white px-4 py-2 rounded font-bold hover:bg-green-600 transition shadow-sm w-24">
+                        開始
+                    </button>
+                    <button id="step-btn" class="bg-amber-500 text-white px-4 py-2 rounded font-bold hover:bg-amber-600 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        單步執行
                     </button>
                     <button id="reset-btn" class="bg-slate-200 text-slate-700 px-4 py-2 rounded font-bold hover:bg-slate-300 transition shadow-sm">
                         重置
@@ -89,9 +95,9 @@
                         <h3 class="font-bold text-slate-700 text-lg" id="linear-track-title">線性搜尋跑道</h3>
                         <span class="text-sm font-mono bg-slate-100 px-2 py-1 rounded font-bold" id="linear-steps">步數: 0</span>
                     </div>
-                    <div id="linear-grid" class="grid-container bg-slate-100 p-4 rounded-lg border border-slate-200 mb-3 pb-8"></div>
+                    <div id="linear-grid" class="grid-container bg-slate-100 p-4 rounded-lg border border-slate-200 mb-3"></div>
                     <!-- Linear Status -->
-                    <div class="bg-slate-50 p-3 rounded border border-slate-200 min-h-[60px] flex items-center justify-center text-center text-sm font-medium text-slate-600" id="linear-status">
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200 min-h-[60px] flex items-center justify-center text-center text-sm font-medium text-slate-600 transition-colors" id="linear-status">
                         等待開始...
                     </div>
                 </div>
@@ -102,24 +108,39 @@
                         <h3 class="font-bold text-blue-800 text-lg" id="binary-track-title">二分搜尋跑道</h3>
                         <span class="text-sm font-mono bg-blue-50 px-2 py-1 rounded font-bold text-blue-700" id="binary-steps">步數: 0</span>
                     </div>
-                    <div id="binary-grid" class="grid-container bg-slate-100 p-4 rounded-lg border border-slate-200 mb-3 pb-8"></div>
+                    <div id="binary-grid" class="grid-container bg-slate-100 p-4 rounded-lg border border-slate-200 mb-3"></div>
                     <!-- Binary Status -->
-                    <div class="bg-blue-50 p-3 rounded border border-blue-200 min-h-[60px] flex items-center justify-center text-center text-sm font-medium text-blue-800" id="binary-status">
+                    <div class="bg-blue-50 p-3 rounded border border-blue-200 min-h-[60px] flex items-center justify-center text-center text-sm font-medium text-blue-800 transition-colors" id="binary-status">
                         等待開始...
                     </div>
                 </div>
 
             </div>
         </section>
-
     </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-slate-400 py-4 text-center text-sm mt-auto">
+        <p>Created by Sam Li</p>
+    </footer>
 
     <script>
         const MAX_NUM = 31;
         let currentLang = 'zh';
-        let isRacing = false;
+        
+        // Animation State
+        let isRunning = false;
+        let isPaused = false;
+        let hasStarted = false;
         let linearTimer = null;
         let binaryTimer = null;
+        let target = 23;
+
+        // Linear State
+        let lState = { current: 1, steps: 0, finished: false };
+        
+        // Binary State
+        let bState = { left: 1, right: MAX_NUM, steps: 0, phase: 'calc', mid: 0, finished: false };
 
         const dict = {
             en: {
@@ -132,7 +153,10 @@
                 binaryDesc: "Checks the middle value and eliminates half the data each time. Extremely fast, but requires sorted data.",
                 raceTitle: `The Great Race: 1 to ${MAX_NUM}`,
                 targetLabel: `Target (1-${MAX_NUM}):`,
-                startBtn: "Start Race",
+                startBtn: "Start",
+                pauseBtn: "Pause",
+                resumeBtn: "Resume",
+                stepBtn: "Next Step",
                 resetBtn: "Reset",
                 linearTrackTitle: "Linear Search",
                 binaryTrackTitle: "Binary Search",
@@ -144,7 +168,8 @@
                 binCheck: (m, t) => `${m} is not ${t}.`,
                 binElimLeft: (m) => `Target is larger. Eliminating ${m} and left side.`,
                 binElimRight: (m) => `Target is smaller. Eliminating ${m} and right side.`,
-                binFound: (m) => `Found ${m} at the middle!`
+                binFound: (m) => `Found ${m} at the middle!`,
+                binNotFound: "Target not found in data."
             },
             zh: {
                 appTitle: "搜尋演算法：二分搜尋 vs 線性搜尋",
@@ -156,7 +181,10 @@
                 binaryDesc: "每次挑選中間值比較，直接淘汰一半的資料。速度極快，但資料必須先排序。",
                 raceTitle: `大賽跑：1 到 ${MAX_NUM}`,
                 targetLabel: `目標數字 (1-${MAX_NUM})：`,
-                startBtn: "開始尋找",
+                startBtn: "開始",
+                pauseBtn: "暫停",
+                resumeBtn: "繼續",
+                stepBtn: "單步執行",
                 resetBtn: "重置",
                 linearTrackTitle: "線性搜尋跑道",
                 binaryTrackTitle: "二分搜尋跑道",
@@ -168,7 +196,8 @@
                 binCheck: (m, t) => `${m} 不是 ${t}`,
                 binElimLeft: (m) => `目標比 ${m} 大，排除左半邊`,
                 binElimRight: (m) => `目標比 ${m} 小，排除右半邊`,
-                binFound: (m) => `在中間找到了 ${m}！`
+                binFound: (m) => `在中間找到了 ${m}！`,
+                binNotFound: "資料中找不到目標。"
             }
         };
 
@@ -183,6 +212,7 @@
             raceTitle: document.getElementById('race-title'),
             targetLabel: document.getElementById('target-label'),
             startBtn: document.getElementById('start-btn'),
+            stepBtn: document.getElementById('step-btn'),
             resetBtn: document.getElementById('reset-btn'),
             linearTrackTitle: document.getElementById('linear-track-title'),
             binaryTrackTitle: document.getElementById('binary-track-title'),
@@ -206,16 +236,22 @@
             els.binaryDesc.textContent = t.binaryDesc;
             els.raceTitle.textContent = t.raceTitle;
             els.targetLabel.textContent = t.targetLabel;
-            els.startBtn.textContent = t.startBtn;
+            
+            if (!hasStarted) els.startBtn.textContent = t.startBtn;
+            else if (isPaused) els.startBtn.textContent = t.resumeBtn;
+            else els.startBtn.textContent = t.pauseBtn;
+            
+            els.stepBtn.textContent = t.stepBtn;
             els.resetBtn.textContent = t.resetBtn;
             els.linearTrackTitle.textContent = t.linearTrackTitle;
             els.binaryTrackTitle.textContent = t.binaryTrackTitle;
             
-            if(!isRacing) {
+            els.linearSteps.textContent = t.steps + lState.steps;
+            els.binarySteps.textContent = t.steps + bState.steps;
+
+            if(!hasStarted) {
                 els.linearStatus.textContent = t.statusWait;
                 els.binaryStatus.textContent = t.statusWait;
-                els.linearSteps.textContent = t.steps + "0";
-                els.binarySteps.textContent = t.steps + "0";
             }
         }
 
@@ -226,43 +262,59 @@
                 const lCell = document.createElement('div');
                 lCell.className = 'cell bg-white text-slate-600 border border-slate-300 font-semibold shadow-sm';
                 lCell.id = `l-${i}`;
-                lCell.textContent = i;
+                lCell.innerHTML = `<span>${i}</span>`;
                 els.linearGrid.appendChild(lCell);
 
                 const bCell = document.createElement('div');
                 bCell.className = 'cell bg-white text-slate-600 border border-slate-300 font-semibold shadow-sm';
                 bCell.id = `b-${i}`;
-                bCell.textContent = i;
                 
-                // Pointer container for L, M, R
-                const pointer = document.createElement('div');
-                pointer.className = 'pointer';
-                pointer.id = `bp-${i}`;
-                bCell.appendChild(pointer);
-                
+                // Redesigned pointer container inside the cell
+                bCell.innerHTML = `
+                    <span class="mt-[-8px]">${i}</span>
+                    <div class="pointer-container" id="bp-${i}"></div>
+                `;
                 els.binaryGrid.appendChild(bCell);
             }
         }
 
         function clearPointers() {
             for (let i = 1; i <= MAX_NUM; i++) {
-                document.getElementById(`bp-${i}`).textContent = '';
+                document.getElementById(`bp-${i}`).innerHTML = '';
+            }
+        }
+
+        function drawPointers() {
+            clearPointers();
+            if(bState.left <= MAX_NUM && bState.left >= 1) {
+                document.getElementById(`bp-${bState.left}`).innerHTML += `<span class="text-blue-600">L</span>`;
+            }
+            if(bState.right >= 1 && bState.right <= MAX_NUM) {
+                document.getElementById(`bp-${bState.right}`).innerHTML += `<span class="text-blue-600">R</span>`;
+            }
+            if(bState.mid >= 1 && bState.mid <= MAX_NUM && bState.phase !== 'calc') {
+                document.getElementById(`bp-${bState.mid}`).innerHTML += `<span class="text-red-500">M</span>`;
             }
         }
 
         function resetRace() {
             clearInterval(linearTimer);
             clearInterval(binaryTimer);
-            isRacing = false;
-            els.startBtn.disabled = false;
-            els.startBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            isRunning = false;
+            isPaused = false;
+            hasStarted = false;
+            
+            lState = { current: 1, steps: 0, finished: false };
+            bState = { left: 1, right: MAX_NUM, steps: 0, phase: 'calc', mid: 0, finished: false };
+            
             els.targetInput.disabled = false;
+            els.stepBtn.disabled = true;
             
-            els.linearSteps.textContent = dict[currentLang].steps + "0";
-            els.binarySteps.textContent = dict[currentLang].steps + "0";
-            els.linearStatus.textContent = dict[currentLang].statusWait;
-            els.binaryStatus.textContent = dict[currentLang].statusWait;
-            
+            els.linearStatus.classList.remove('bg-green-100', 'text-green-700');
+            els.binaryStatus.classList.remove('bg-green-100', 'text-green-700');
+            els.linearStatus.classList.add('bg-slate-50', 'text-slate-600');
+            els.binaryStatus.classList.add('bg-blue-50', 'text-blue-800');
+
             for (let i = 1; i <= MAX_NUM; i++) {
                 const lCell = document.getElementById(`l-${i}`);
                 const bCell = document.getElementById(`b-${i}`);
@@ -270,130 +322,162 @@
                 bCell.className = 'cell bg-white text-slate-600 border border-slate-300 font-semibold shadow-sm';
             }
             clearPointers();
+            updateLanguage();
         }
 
-        function startRace() {
-            if (isRacing) return;
-            let target = parseInt(els.targetInput.value);
-            if (isNaN(target) || target < 1 || target > MAX_NUM) {
-                alert(currentLang === 'en' ? `Please enter a number between 1 and ${MAX_NUM}.` : `請輸入 1 到 ${MAX_NUM} 之間的數字。`);
+        function stepLinear() {
+            if (lState.finished) return;
+            const t = dict[currentLang];
+
+            if (lState.current > 1) {
+                const prev = document.getElementById(`l-${lState.current - 1}`);
+                if (lState.current - 1 !== target) {
+                    prev.classList.replace('bg-yellow-300', 'bg-slate-100');
+                    prev.classList.add('opacity-50');
+                }
+            }
+
+            lState.steps++;
+            els.linearSteps.textContent = t.steps + lState.steps;
+            const currCell = document.getElementById(`l-${lState.current}`);
+            
+            if (lState.current === target) {
+                currCell.classList.replace('bg-white', 'bg-green-500');
+                currCell.classList.replace('text-slate-600', 'text-white');
+                currCell.classList.add('scale-110', 'shadow-md', 'z-10');
+                els.linearStatus.textContent = t.linFound(lState.current);
+                els.linearStatus.classList.replace('bg-slate-50', 'bg-green-100');
+                els.linearStatus.classList.replace('text-slate-600', 'text-green-700');
+                lState.finished = true;
+            } else {
+                currCell.classList.replace('bg-white', 'bg-yellow-300');
+                els.linearStatus.textContent = t.linCheck(lState.current);
+                lState.current++;
+            }
+        }
+
+        function stepBinary() {
+            if (bState.finished) return;
+            const t = dict[currentLang];
+
+            if (bState.left > bState.right) {
+                els.binaryStatus.textContent = t.binNotFound;
+                bState.finished = true;
                 return;
             }
 
-            resetRace();
-            isRacing = true;
-            els.startBtn.disabled = true;
-            els.startBtn.classList.add('opacity-50', 'cursor-not-allowed');
-            els.targetInput.disabled = true;
-
-            const t = dict[currentLang];
-
-            // --- Linear Search Logic ---
-            let lCurrent = 1;
-            let lSteps = 0;
-            linearTimer = setInterval(() => {
-                if (lCurrent > 1) {
-                    const prev = document.getElementById(`l-${lCurrent - 1}`);
-                    if (lCurrent - 1 !== target) {
-                        prev.classList.replace('bg-yellow-300', 'bg-slate-100');
-                        prev.classList.add('opacity-50');
-                    }
-                }
-
-                lSteps++;
-                els.linearSteps.textContent = t.steps + lSteps;
-                const currCell = document.getElementById(`l-${lCurrent}`);
+            if (bState.phase === 'calc') {
+                bState.steps++;
+                els.binarySteps.textContent = t.steps + bState.steps;
+                bState.mid = Math.floor((bState.left + bState.right) / 2);
                 
-                if (lCurrent === target) {
-                    currCell.classList.replace('bg-white', 'bg-green-500');
-                    currCell.classList.replace('text-slate-600', 'text-white');
-                    currCell.classList.add('scale-110', 'shadow-md');
-                    els.linearStatus.textContent = t.linFound(lCurrent);
-                    els.linearStatus.classList.replace('text-slate-600', 'text-green-600');
-                    clearInterval(linearTimer);
+                drawPointers();
+                const midCell = document.getElementById(`b-${bState.mid}`);
+                midCell.classList.replace('bg-white', 'bg-blue-400');
+                midCell.classList.replace('text-slate-600', 'text-white');
+                midCell.classList.add('scale-110', 'shadow-md', 'z-10');
+                
+                els.binaryStatus.textContent = t.binCalc(bState.left, bState.right, bState.mid);
+                bState.phase = 'check';
+            } 
+            else if (bState.phase === 'check') {
+                const midCell = document.getElementById(`b-${bState.mid}`);
+                if (bState.mid === target) {
+                    midCell.classList.replace('bg-blue-400', 'bg-green-500');
+                    els.binaryStatus.textContent = t.binFound(bState.mid);
+                    els.binaryStatus.classList.replace('bg-blue-50', 'bg-green-100');
+                    els.binaryStatus.classList.replace('text-blue-800', 'text-green-700');
+                    bState.finished = true;
                 } else {
-                    currCell.classList.replace('bg-white', 'bg-yellow-300');
-                    els.linearStatus.textContent = t.linCheck(lCurrent);
-                    lCurrent++;
+                    els.binaryStatus.textContent = t.binCheck(bState.mid, target);
+                    bState.phase = 'eliminate';
                 }
-            }, 300); // Slower linear search to read text
+            }
+            else if (bState.phase === 'eliminate') {
+                const midCell = document.getElementById(`b-${bState.mid}`);
+                midCell.classList.remove('scale-110', 'shadow-md', 'z-10');
+                midCell.classList.replace('bg-blue-400', 'bg-slate-200');
+                midCell.classList.replace('text-white', 'text-slate-400');
 
-            // --- Binary Search Logic ---
-            let bLeft = 1;
-            let bRight = MAX_NUM;
-            let bSteps = 0;
-            let bState = 'calc'; // calc -> check -> eliminate
-            let bMid = 0;
+                if (bState.mid < target) {
+                    els.binaryStatus.textContent = t.binElimLeft(bState.mid);
+                    for (let i = bState.left; i <= bState.mid; i++) {
+                        const c = document.getElementById(`b-${i}`);
+                        c.className = 'cell bg-slate-100 text-slate-300 border border-slate-200 opacity-40';
+                    }
+                    bState.left = bState.mid + 1;
+                } else {
+                    els.binaryStatus.textContent = t.binElimRight(bState.mid);
+                    for (let i = bState.mid; i <= bState.right; i++) {
+                        const c = document.getElementById(`b-${i}`);
+                        c.className = 'cell bg-slate-100 text-slate-300 border border-slate-200 opacity-40';
+                    }
+                    bState.right = bState.mid - 1;
+                }
+                bState.phase = 'calc';
+                drawPointers();
+            }
+        }
+
+        function toggleRace() {
+            let parsedTarget = parseInt(els.targetInput.value);
+            if (isNaN(parsedTarget) || parsedTarget < 1 || parsedTarget > MAX_NUM) {
+                alert(currentLang === 'en' ? `Please enter a number between 1 and ${MAX_NUM}.` : `請輸入 1 到 ${MAX_NUM} 之間的數字。`);
+                return;
+            }
+            target = parsedTarget;
+
+            if (!hasStarted) {
+                // Initial Start
+                hasStarted = true;
+                els.targetInput.disabled = true;
+                els.stepBtn.disabled = true;
+                els.startBtn.classList.replace('bg-green-500', 'bg-red-500');
+                els.startBtn.classList.replace('hover:bg-green-600', 'hover:bg-red-600');
+                resumeRace();
+            } else if (isRunning) {
+                // Pause
+                pauseRace();
+            } else {
+                // Resume
+                resumeRace();
+            }
+            updateLanguage();
+        }
+
+        function pauseRace() {
+            clearInterval(linearTimer);
+            clearInterval(binaryTimer);
+            isRunning = false;
+            isPaused = true;
+            els.stepBtn.disabled = false;
+            els.startBtn.classList.replace('bg-red-500', 'bg-green-500');
+            els.startBtn.classList.replace('hover:bg-red-600', 'hover:bg-green-600');
+        }
+
+        function resumeRace() {
+            isRunning = true;
+            isPaused = false;
+            els.stepBtn.disabled = true;
+            els.startBtn.classList.replace('bg-green-500', 'bg-red-500');
+            els.startBtn.classList.replace('hover:bg-green-600', 'hover:bg-red-600');
+            
+            // Start intervals
+            linearTimer = setInterval(() => {
+                stepLinear();
+                if (lState.finished && bState.finished) pauseRace();
+            }, 300);
 
             binaryTimer = setInterval(() => {
-                if (bLeft > bRight) {
-                    clearInterval(binaryTimer);
-                    return;
-                }
+                stepBinary();
+                if (lState.finished && bState.finished) pauseRace();
+            }, 1200);
+        }
 
-                clearPointers();
-                if(bLeft <= MAX_NUM) document.getElementById(`bp-${bLeft}`).textContent = 'L';
-                if(bRight >= 1) {
-                    const rPtr = document.getElementById(`bp-${bRight}`);
-                    rPtr.textContent = rPtr.textContent ? rPtr.textContent + ',R' : 'R';
-                }
-
-                if (bState === 'calc') {
-                    bSteps++;
-                    els.binarySteps.textContent = t.steps + bSteps;
-                    bMid = Math.floor((bLeft + bRight) / 2);
-                    
-                    const mPtr = document.getElementById(`bp-${bMid}`);
-                    mPtr.textContent = mPtr.textContent ? mPtr.textContent + ',M' : 'M';
-                    mPtr.style.color = '#2563eb'; // Blue for mid
-
-                    const midCell = document.getElementById(`b-${bMid}`);
-                    midCell.classList.replace('bg-white', 'bg-blue-400');
-                    midCell.classList.replace('text-slate-600', 'text-white');
-                    midCell.classList.add('scale-110', 'shadow-md');
-                    
-                    els.binaryStatus.textContent = t.binCalc(bLeft, bRight, bMid);
-                    bState = 'check';
-                } 
-                else if (bState === 'check') {
-                    const mPtr = document.getElementById(`bp-${bMid}`);
-                    mPtr.textContent = mPtr.textContent ? mPtr.textContent + ',M' : 'M';
-                    
-                    const midCell = document.getElementById(`b-${bMid}`);
-                    if (bMid === target) {
-                        midCell.classList.replace('bg-blue-400', 'bg-green-500');
-                        els.binaryStatus.textContent = t.binFound(bMid);
-                        els.binaryStatus.classList.replace('text-blue-800', 'text-green-600');
-                        clearInterval(binaryTimer);
-                    } else {
-                        els.binaryStatus.textContent = t.binCheck(bMid, target);
-                        bState = 'eliminate';
-                    }
-                }
-                else if (bState === 'eliminate') {
-                    const midCell = document.getElementById(`b-${bMid}`);
-                    midCell.classList.remove('scale-110', 'shadow-md');
-                    midCell.classList.replace('bg-blue-400', 'bg-slate-200');
-                    midCell.classList.replace('text-white', 'text-slate-400');
-
-                    if (bMid < target) {
-                        els.binaryStatus.textContent = t.binElimLeft(bMid);
-                        for (let i = bLeft; i <= bMid; i++) {
-                            const c = document.getElementById(`b-${i}`);
-                            c.className = 'cell bg-slate-100 text-slate-300 border border-slate-200 opacity-40';
-                        }
-                        bLeft = bMid + 1;
-                    } else {
-                        els.binaryStatus.textContent = t.binElimRight(bMid);
-                        for (let i = bMid; i <= bRight; i++) {
-                            const c = document.getElementById(`b-${i}`);
-                            c.className = 'cell bg-slate-100 text-slate-300 border border-slate-200 opacity-40';
-                        }
-                        bRight = bMid - 1;
-                    }
-                    bState = 'calc';
-                }
-            }, 1200); // 1.2 seconds per step to allow reading the status text
+        function stepManual() {
+            if (isRunning) return;
+            stepLinear();
+            stepBinary();
         }
 
         els.langToggle.addEventListener('click', () => {
@@ -401,8 +485,13 @@
             updateLanguage();
         });
 
-        els.startBtn.addEventListener('click', startRace);
-        els.resetBtn.addEventListener('click', resetRace);
+        els.startBtn.addEventListener('click', toggleRace);
+        els.stepBtn.addEventListener('click', stepManual);
+        els.resetBtn.addEventListener('click', () => {
+            resetRace();
+            els.startBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
+            els.startBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+        });
 
         createGrids();
         updateLanguage();
