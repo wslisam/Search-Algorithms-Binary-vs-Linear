@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Binary vs Linear Search Race</title>
+    <title>Binary vs Linear Search</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .grid-container {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
-            gap: 8px;
+            grid-template-columns: repeat(auto-fill, minmax(36px, 1fr));
+            gap: 6px;
         }
         .cell {
             aspect-ratio: 1;
@@ -17,7 +17,7 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 1.1rem;
+            font-size: 1rem;
             border-radius: 0.375rem;
             transition: all 0.3s ease;
             position: relative;
@@ -32,85 +32,108 @@
             line-height: 1;
         }
         @media (max-width: 640px) {
-            .cell { font-size: 0.9rem; }
+            .cell { font-size: 0.85rem; }
             .grid-container { grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 4px; }
         }
     </style>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col">
 
-    <!-- Header -->
-    <header class="bg-blue-600 text-white shadow-md py-4 px-6 flex justify-between items-center">
-        <h1 class="text-2xl font-bold" id="app-title">搜尋演算法：二分搜尋 vs 線性搜尋</h1>
-        <button id="lang-toggle" class="bg-white text-blue-600 px-3 py-1 rounded font-semibold hover:bg-blue-50 transition">
-            English
-        </button>
+    <header class="bg-slate-800 text-white shadow-md py-4 px-6 flex flex-wrap justify-between items-center gap-4">
+        <h1 class="text-2xl font-bold tracking-wide" id="app-title">搜尋演算法：二分搜尋 vs 線性搜尋</h1>
+        <div class="flex items-center gap-4">
+            <span class="text-sm font-medium text-slate-300">Created by Sam Li</span>
+            <button id="lang-toggle" class="bg-slate-700 text-white px-3 py-1.5 rounded text-sm font-semibold hover:bg-slate-600 transition border border-slate-600">
+                English
+            </button>
+        </div>
     </header>
 
-    <!-- Main Content -->
     <main class="flex-grow max-w-6xl mx-auto w-full p-6 space-y-6">
         
-        <!-- Explanations Section -->
-        <section class="bg-white rounded-xl shadow-sm p-5 border border-slate-200">
-            <h2 class="text-xl font-bold text-blue-700 mb-4" id="theory-title">概念理解</h2>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="bg-slate-50 p-4 rounded-lg border border-slate-100">
-                    <h3 class="font-bold text-lg mb-2 text-slate-700" id="linear-title">線性搜尋 (Linear Search)</h3>
-                    <p class="text-sm text-slate-600" id="linear-desc">從第一個元素開始逐一檢查。適用於未排序的資料，但速度較慢。</p>
+        <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
+            <div class="mb-6 border-b border-slate-100 pb-4">
+                <h2 class="text-xl font-bold text-slate-800 mb-2" id="obj-title">學習目標 (Learning Objective)</h2>
+                <p class="text-slate-600 leading-relaxed" id="obj-desc">透過視覺化賽跑，理解並比較線性搜尋與二分搜尋的運作邏輯。觀察在資料量變大時，為什麼二分搜尋能展現壓倒性的效能優勢。</p>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6 mb-6">
+                <div class="bg-emerald-50 p-5 rounded-lg border border-emerald-100">
+                    <h3 class="font-bold text-lg mb-2 text-emerald-800" id="linear-title">線性搜尋 (Linear Search)</h3>
+                    <p class="text-sm text-slate-700" id="linear-desc">從第一個元素開始逐一檢查，直到找到目標為止。這是一種最直觀的搜尋方式，適用於任何資料（無論是否排序）。缺點是當資料量龐大時，搜尋速度會非常慢。</p>
                 </div>
-                <div class="bg-blue-50 p-4 rounded-lg border border-blue-100">
+                <div class="bg-blue-50 p-5 rounded-lg border border-blue-100">
                     <h3 class="font-bold text-lg mb-2 text-blue-800" id="binary-title">二分搜尋 (Binary Search)</h3>
-                    <p class="text-sm text-slate-600" id="binary-desc">每次挑選中間值比較，直接淘汰一半的資料。速度極快，但資料必須先排序。</p>
+                    <p class="text-sm text-slate-700" id="binary-desc">透過每次檢查「中間值」，直接將搜尋範圍縮減一半。速度極快，即使面對上百萬筆資料也能在幾十次內找到。但其先決條件是：資料必須已經「排序」。</p>
+                </div>
+            </div>
+
+            <div class="grid md:grid-cols-2 gap-6">
+                <div class="bg-rose-50 p-5 rounded-lg border border-rose-100">
+                    <h3 class="font-bold text-lg mb-3 text-rose-800 flex items-center gap-2" id="misc-title">
+                        💡 常見迷思 (Misconceptions)
+                    </h3>
+                    <ul class="space-y-3 text-sm text-slate-700" id="misc-list">
+                        <li><strong class="text-rose-700">迷思一：二分搜尋永遠比較好？</strong><br>不一定！二分搜尋必須在「已排序」的資料上執行。如果資料未排序，事前排序所花費的時間，可能比直接使用線性搜尋還要久。</li>
+                        <li><strong class="text-rose-700">迷思二：只能用來搜尋數字？</strong><br>錯！只要資料有「大小順序」關係（例如英文字母 A-Z、日期先後），都可以使用二分搜尋。</li>
+                    </ul>
+                </div>
+
+                <div class="bg-amber-50 p-5 rounded-lg border border-amber-100">
+                    <h3 class="font-bold text-lg mb-3 text-amber-800 flex items-center gap-2" id="think-title">
+                        🔗 思考與連結 (Think & Link)
+                    </h3>
+                    <p class="text-sm text-slate-700 mb-2 font-medium" id="think-subtitle">生活中有許多搜尋演算法的影子，試著思考：</p>
+                    <ul class="space-y-2 text-sm text-slate-700 list-disc list-inside" id="think-list">
+                        <li><strong>翻英漢字典：</strong>你會從第一頁開始翻（線性），還是直接從中間翻開找（二分）？</li>
+                        <li><strong>找遺失的鑰匙：</strong>你只能一個個房間找，因為鑰匙沒有「順序」可言，這就是真實世界的線性搜尋！</li>
+                    </ul>
                 </div>
             </div>
         </section>
 
-        <!-- Interactive Race Section -->
         <section class="bg-white rounded-xl shadow-sm p-6 border border-slate-200">
-            <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h2 class="text-xl font-bold text-blue-700" id="race-title">大賽跑：1 到 31</h2>
+            <div class="flex flex-col lg:flex-row justify-between items-center mb-6 gap-4 border-b border-slate-100 pb-4">
+                <h2 class="text-xl font-bold text-slate-800" id="race-title">大賽跑：1 到 31</h2>
                 
                 <div class="flex flex-wrap items-center justify-center gap-3">
-                    <label for="target-input" class="font-semibold" id="target-label">目標數字 (1-31)：</label>
-                    <input type="number" id="target-input" min="1" max="31" value="23" class="border border-slate-300 rounded px-3 py-1 w-20 text-center focus:outline-none focus:border-blue-500 font-bold">
+                    <label for="target-input" class="font-semibold text-slate-700" id="target-label">目標數字 (1-31)：</label>
+                    <input type="number" id="target-input" min="1" max="31" value="23" class="border border-slate-300 rounded px-3 py-1.5 w-20 text-center focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 font-bold bg-slate-50">
                     
-                    <button id="start-btn" class="bg-green-500 text-white px-4 py-2 rounded font-bold hover:bg-green-600 transition shadow-sm w-24">
-                        開始
-                    </button>
-                    <button id="step-btn" class="bg-amber-500 text-white px-4 py-2 rounded font-bold hover:bg-amber-600 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
-                        單步執行
-                    </button>
-                    <button id="reset-btn" class="bg-slate-200 text-slate-700 px-4 py-2 rounded font-bold hover:bg-slate-300 transition shadow-sm">
-                        重置
-                    </button>
+                    <div class="flex gap-2">
+                        <button id="start-btn" class="bg-slate-800 text-white px-5 py-1.5 rounded font-bold hover:bg-slate-700 transition shadow-sm w-24">
+                            開始
+                        </button>
+                        <button id="step-btn" class="bg-amber-500 text-white px-5 py-1.5 rounded font-bold hover:bg-amber-600 transition shadow-sm disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                            單步執行
+                        </button>
+                        <button id="reset-btn" class="bg-slate-200 text-slate-700 px-5 py-1.5 rounded font-bold hover:bg-slate-300 transition shadow-sm">
+                            重置
+                        </button>
+                    </div>
                 </div>
             </div>
 
-            <!-- Side by Side Tracks -->
             <div class="grid md:grid-cols-2 gap-8">
                 
-                <!-- Linear Search Track -->
                 <div class="flex flex-col">
-                    <div class="flex justify-between items-end mb-2">
-                        <h3 class="font-bold text-slate-700 text-lg" id="linear-track-title">線性搜尋跑道</h3>
-                        <span class="text-sm font-mono bg-slate-100 px-2 py-1 rounded font-bold" id="linear-steps">步數: 0</span>
+                    <div class="flex justify-between items-end mb-3">
+                        <h3 class="font-bold text-emerald-700 text-lg" id="linear-track-title">線性搜尋跑道</h3>
+                        <span class="text-sm font-mono bg-emerald-100 px-3 py-1 rounded-full font-bold text-emerald-800 shadow-inner" id="linear-steps">步數: 0</span>
                     </div>
-                    <div id="linear-grid" class="grid-container bg-slate-100 p-4 rounded-lg border border-slate-200 mb-3"></div>
-                    <!-- Linear Status -->
-                    <div class="bg-slate-50 p-3 rounded border border-slate-200 min-h-[60px] flex items-center justify-center text-center text-sm font-medium text-slate-600 transition-colors" id="linear-status">
+                    <div id="linear-grid" class="grid-container bg-slate-50 p-4 rounded-lg border border-slate-200 mb-3 shadow-inner min-h-[180px]"></div>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200 min-h-[60px] flex items-center justify-center text-center text-sm font-medium text-slate-600 transition-colors shadow-sm" id="linear-status">
                         等待開始...
                     </div>
                 </div>
 
-                <!-- Binary Search Track -->
                 <div class="flex flex-col">
-                    <div class="flex justify-between items-end mb-2">
-                        <h3 class="font-bold text-blue-800 text-lg" id="binary-track-title">二分搜尋跑道</h3>
-                        <span class="text-sm font-mono bg-blue-50 px-2 py-1 rounded font-bold text-blue-700" id="binary-steps">步數: 0</span>
+                    <div class="flex justify-between items-end mb-3">
+                        <h3 class="font-bold text-blue-700 text-lg" id="binary-track-title">二分搜尋跑道</h3>
+                        <span class="text-sm font-mono bg-blue-100 px-3 py-1 rounded-full font-bold text-blue-800 shadow-inner" id="binary-steps">步數: 0</span>
                     </div>
-                    <div id="binary-grid" class="grid-container bg-slate-100 p-4 rounded-lg border border-slate-200 mb-3"></div>
-                    <!-- Binary Status -->
-                    <div class="bg-blue-50 p-3 rounded border border-blue-200 min-h-[60px] flex items-center justify-center text-center text-sm font-medium text-blue-800 transition-colors" id="binary-status">
+                    <div id="binary-grid" class="grid-container bg-slate-50 p-4 rounded-lg border border-slate-200 mb-3 shadow-inner min-h-[180px]"></div>
+                    <div class="bg-slate-50 p-3 rounded border border-slate-200 min-h-[60px] flex items-center justify-center text-center text-sm font-medium text-slate-600 transition-colors shadow-sm" id="binary-status">
                         等待開始...
                     </div>
                 </div>
@@ -118,11 +141,6 @@
             </div>
         </section>
     </main>
-
-    <!-- Footer -->
-    <footer class="bg-slate-800 text-slate-400 py-4 text-center text-sm mt-auto">
-        <p>Created by Sam Li</p>
-    </footer>
 
     <script>
         const MAX_NUM = 31;
@@ -146,39 +164,55 @@
             en: {
                 appTitle: "Search Algorithms: Binary vs Linear",
                 langToggle: "中文",
-                theoryTitle: "Understanding the Concepts",
+                objTitle: "Learning Objective",
+                objDesc: "Visualize and compare the logic of Linear and Binary Search. Observe why Binary Search demonstrates overwhelming performance advantages as data volume increases.",
                 linearTitle: "Linear Search",
-                linearDesc: "Checks elements one by one from the start. Works on unsorted data, but is slower.",
+                linearDesc: "Checks elements one by one from the start. Highly intuitive and works on any data (sorted or not). However, it becomes extremely slow with large datasets.",
                 binaryTitle: "Binary Search",
-                binaryDesc: "Checks the middle value and eliminates half the data each time. Extremely fast, but requires sorted data.",
+                binaryDesc: "Eliminates half of the remaining search space by checking the middle value. Incredibly fast, but has a strict prerequisite: the data must be sorted.",
+                miscTitle: "💡 Common Misconceptions",
+                misc1: '<strong class="text-rose-700">Myth 1: Binary Search is ALWAYS better.</strong><br>Not necessarily! It requires sorted data. If data is unsorted, the time taken to sort it might exceed the time of a simple linear search.',
+                misc2: '<strong class="text-rose-700">Myth 2: It only works with numbers.</strong><br>False! It works with any comparable data (e.g., alphabetical strings, chronological dates).',
+                thinkTitle: "🔗 Think & Link",
+                thinkSubtitle: "Search algorithms exist in our daily lives:",
+                think1: "<strong>Dictionary:</strong> Do you start from page 1 (Linear), or open to the middle (Binary)?",
+                think2: "<strong>Lost Keys:</strong> You check rooms one by one because keys have no 'order'. This is real-world linear search!",
                 raceTitle: `The Great Race: 1 to ${MAX_NUM}`,
                 targetLabel: `Target (1-${MAX_NUM}):`,
                 startBtn: "Start",
                 pauseBtn: "Pause",
                 resumeBtn: "Resume",
-                stepBtn: "Next Step",
+                stepBtn: "Step",
                 resetBtn: "Reset",
-                linearTrackTitle: "Linear Search",
-                binaryTrackTitle: "Binary Search",
+                linearTrackTitle: "Linear Search Track",
+                binaryTrackTitle: "Binary Search Track",
                 steps: "Steps: ",
                 statusWait: "Waiting to start...",
                 linCheck: (curr) => `Checking if ${curr} is the target...`,
                 linFound: (curr) => `Found ${curr}!`,
                 binCalc: (l, r, m) => `Range is ${l}-${r}. Middle is ${m}.`,
                 binCheck: (m, t) => `${m} is not ${t}.`,
-                binElimLeft: (m) => `Target is larger. Eliminating ${m} and left side.`,
-                binElimRight: (m) => `Target is smaller. Eliminating ${m} and right side.`,
+                binElimLeft: (m) => `Target > ${m}. Eliminating left side.`,
+                binElimRight: (m) => `Target < ${m}. Eliminating right side.`,
                 binFound: (m) => `Found ${m} at the middle!`,
                 binNotFound: "Target not found in data."
             },
             zh: {
                 appTitle: "搜尋演算法：二分搜尋 vs 線性搜尋",
                 langToggle: "English",
-                theoryTitle: "概念理解",
+                objTitle: "學習目標 (Learning Objective)",
+                objDesc: "透過視覺化賽跑，理解並比較線性搜尋與二分搜尋的運作邏輯。觀察在資料量變大時，為什麼二分搜尋能展現壓倒性的效能優勢。",
                 linearTitle: "線性搜尋 (Linear Search)",
-                linearDesc: "從第一個元素開始逐一檢查。適用於未排序的資料，但速度較慢。",
+                linearDesc: "從第一個元素開始逐一檢查，直到找到目標為止。這是一種最直觀的搜尋方式，適用於任何資料（無論是否排序）。缺點是當資料量龐大時，搜尋速度會非常慢。",
                 binaryTitle: "二分搜尋 (Binary Search)",
-                binaryDesc: "每次挑選中間值比較，直接淘汰一半的資料。速度極快，但資料必須先排序。",
+                binaryDesc: "透過每次檢查「中間值」，直接將搜尋範圍縮減一半。速度極快，即使面對上百萬筆資料也能在幾十次內找到。但其先決條件是：資料必須已經「排序」。",
+                miscTitle: "💡 常見迷思 (Misconceptions)",
+                misc1: '<strong class="text-rose-700">迷思一：二分搜尋永遠比較好？</strong><br>不一定！二分搜尋必須在「已排序」的資料上執行。如果資料未排序，事前排序所花費的時間，可能比直接使用線性搜尋還要久。',
+                misc2: '<strong class="text-rose-700">迷思二：只能用來搜尋數字？</strong><br>錯！只要資料有「大小順序」關係（例如英文字母 A-Z、日期先後），都可以使用二分搜尋。',
+                thinkTitle: "🔗 思考與連結 (Think & Link)",
+                thinkSubtitle: "生活中有許多搜尋演算法的影子，試著思考：",
+                think1: "<strong>翻英漢字典：</strong>你會從第一頁開始翻（線性），還是直接從中間翻開找（二分）？",
+                think2: "<strong>找遺失的鑰匙：</strong>你只能一個個房間找，因為鑰匙沒有「順序」可言，這就是真實世界的線性搜尋！",
                 raceTitle: `大賽跑：1 到 ${MAX_NUM}`,
                 targetLabel: `目標數字 (1-${MAX_NUM})：`,
                 startBtn: "開始",
@@ -204,11 +238,17 @@
         const els = {
             appTitle: document.getElementById('app-title'),
             langToggle: document.getElementById('lang-toggle'),
-            theoryTitle: document.getElementById('theory-title'),
+            objTitle: document.getElementById('obj-title'),
+            objDesc: document.getElementById('obj-desc'),
             linearTitle: document.getElementById('linear-title'),
             linearDesc: document.getElementById('linear-desc'),
             binaryTitle: document.getElementById('binary-title'),
             binaryDesc: document.getElementById('binary-desc'),
+            miscTitle: document.getElementById('misc-title'),
+            miscList: document.getElementById('misc-list'),
+            thinkTitle: document.getElementById('think-title'),
+            thinkSubtitle: document.getElementById('think-subtitle'),
+            thinkList: document.getElementById('think-list'),
             raceTitle: document.getElementById('race-title'),
             targetLabel: document.getElementById('target-label'),
             startBtn: document.getElementById('start-btn'),
@@ -229,11 +269,20 @@
             const t = dict[currentLang];
             els.appTitle.textContent = t.appTitle;
             els.langToggle.textContent = t.langToggle;
-            els.theoryTitle.textContent = t.theoryTitle;
+            els.objTitle.textContent = t.objTitle;
+            els.objDesc.textContent = t.objDesc;
             els.linearTitle.textContent = t.linearTitle;
             els.linearDesc.textContent = t.linearDesc;
             els.binaryTitle.textContent = t.binaryTitle;
             els.binaryDesc.textContent = t.binaryDesc;
+            
+            els.miscTitle.innerHTML = `💡 ${t.miscTitle}`;
+            els.miscList.innerHTML = `<li>${t.misc1}</li><li>${t.misc2}</li>`;
+            
+            els.thinkTitle.innerHTML = `🔗 ${t.thinkTitle}`;
+            els.thinkSubtitle.textContent = t.thinkSubtitle;
+            els.thinkList.innerHTML = `<li>${t.think1}</li><li>${t.think2}</li>`;
+
             els.raceTitle.textContent = t.raceTitle;
             els.targetLabel.textContent = t.targetLabel;
             
@@ -259,19 +308,19 @@
             els.linearGrid.innerHTML = '';
             els.binaryGrid.innerHTML = '';
             for (let i = 1; i <= MAX_NUM; i++) {
+                // Linear Cell
                 const lCell = document.createElement('div');
-                lCell.className = 'cell bg-white text-slate-600 border border-slate-300 font-semibold shadow-sm';
+                lCell.className = 'cell bg-white text-slate-600 border border-slate-200 font-semibold shadow-sm';
                 lCell.id = `l-${i}`;
                 lCell.innerHTML = `<span>${i}</span>`;
                 els.linearGrid.appendChild(lCell);
 
+                // Binary Cell
                 const bCell = document.createElement('div');
-                bCell.className = 'cell bg-white text-slate-600 border border-slate-300 font-semibold shadow-sm';
+                bCell.className = 'cell bg-white text-slate-600 border border-slate-200 font-semibold shadow-sm';
                 bCell.id = `b-${i}`;
-                
-                // Redesigned pointer container inside the cell
                 bCell.innerHTML = `
-                    <span class="mt-[-8px]">${i}</span>
+                    <span class="mt-[-6px]">${i}</span>
                     <div class="pointer-container" id="bp-${i}"></div>
                 `;
                 els.binaryGrid.appendChild(bCell);
@@ -293,7 +342,7 @@
                 document.getElementById(`bp-${bState.right}`).innerHTML += `<span class="text-blue-600">R</span>`;
             }
             if(bState.mid >= 1 && bState.mid <= MAX_NUM && bState.phase !== 'calc') {
-                document.getElementById(`bp-${bState.mid}`).innerHTML += `<span class="text-red-500">M</span>`;
+                document.getElementById(`bp-${bState.mid}`).innerHTML += `<span class="text-amber-500">M</span>`;
             }
         }
 
@@ -310,16 +359,13 @@
             els.targetInput.disabled = false;
             els.stepBtn.disabled = true;
             
-            els.linearStatus.classList.remove('bg-green-100', 'text-green-700');
-            els.binaryStatus.classList.remove('bg-green-100', 'text-green-700');
-            els.linearStatus.classList.add('bg-slate-50', 'text-slate-600');
-            els.binaryStatus.classList.add('bg-blue-50', 'text-blue-800');
+            // Reset Status bars
+            els.linearStatus.className = 'bg-slate-50 p-3 rounded border border-slate-200 min-h-[60px] flex items-center justify-center text-center text-sm font-medium text-slate-600 transition-colors shadow-sm';
+            els.binaryStatus.className = 'bg-slate-50 p-3 rounded border border-slate-200 min-h-[60px] flex items-center justify-center text-center text-sm font-medium text-slate-600 transition-colors shadow-sm';
 
             for (let i = 1; i <= MAX_NUM; i++) {
-                const lCell = document.getElementById(`l-${i}`);
-                const bCell = document.getElementById(`b-${i}`);
-                lCell.className = 'cell bg-white text-slate-600 border border-slate-300 font-semibold shadow-sm';
-                bCell.className = 'cell bg-white text-slate-600 border border-slate-300 font-semibold shadow-sm';
+                document.getElementById(`l-${i}`).className = 'cell bg-white text-slate-600 border border-slate-200 font-semibold shadow-sm';
+                document.getElementById(`b-${i}`).className = 'cell bg-white text-slate-600 border border-slate-200 font-semibold shadow-sm';
             }
             clearPointers();
             updateLanguage();
@@ -332,8 +378,8 @@
             if (lState.current > 1) {
                 const prev = document.getElementById(`l-${lState.current - 1}`);
                 if (lState.current - 1 !== target) {
-                    prev.classList.replace('bg-yellow-300', 'bg-slate-100');
-                    prev.classList.add('opacity-50');
+                    prev.classList.replace('bg-emerald-300', 'bg-slate-100');
+                    prev.classList.add('opacity-40');
                 }
             }
 
@@ -342,15 +388,17 @@
             const currCell = document.getElementById(`l-${lState.current}`);
             
             if (lState.current === target) {
-                currCell.classList.replace('bg-white', 'bg-green-500');
+                currCell.classList.replace('bg-white', 'bg-emerald-600');
                 currCell.classList.replace('text-slate-600', 'text-white');
                 currCell.classList.add('scale-110', 'shadow-md', 'z-10');
+                
                 els.linearStatus.textContent = t.linFound(lState.current);
-                els.linearStatus.classList.replace('bg-slate-50', 'bg-green-100');
-                els.linearStatus.classList.replace('text-slate-600', 'text-green-700');
+                els.linearStatus.classList.replace('bg-slate-50', 'bg-emerald-100');
+                els.linearStatus.classList.replace('text-slate-600', 'text-emerald-800');
+                els.linearStatus.classList.replace('border-slate-200', 'border-emerald-300');
                 lState.finished = true;
             } else {
-                currCell.classList.replace('bg-white', 'bg-yellow-300');
+                currCell.classList.replace('bg-white', 'bg-emerald-300');
                 els.linearStatus.textContent = t.linCheck(lState.current);
                 lState.current++;
             }
@@ -383,10 +431,11 @@
             else if (bState.phase === 'check') {
                 const midCell = document.getElementById(`b-${bState.mid}`);
                 if (bState.mid === target) {
-                    midCell.classList.replace('bg-blue-400', 'bg-green-500');
+                    midCell.classList.replace('bg-blue-400', 'bg-blue-600');
                     els.binaryStatus.textContent = t.binFound(bState.mid);
-                    els.binaryStatus.classList.replace('bg-blue-50', 'bg-green-100');
-                    els.binaryStatus.classList.replace('text-blue-800', 'text-green-700');
+                    els.binaryStatus.classList.replace('bg-slate-50', 'bg-blue-100');
+                    els.binaryStatus.classList.replace('text-slate-600', 'text-blue-800');
+                    els.binaryStatus.classList.replace('border-slate-200', 'border-blue-300');
                     bState.finished = true;
                 } else {
                     els.binaryStatus.textContent = t.binCheck(bState.mid, target);
@@ -402,15 +451,13 @@
                 if (bState.mid < target) {
                     els.binaryStatus.textContent = t.binElimLeft(bState.mid);
                     for (let i = bState.left; i <= bState.mid; i++) {
-                        const c = document.getElementById(`b-${i}`);
-                        c.className = 'cell bg-slate-100 text-slate-300 border border-slate-200 opacity-40';
+                        document.getElementById(`b-${i}`).className = 'cell bg-slate-100 text-slate-400 border border-slate-200 opacity-40';
                     }
                     bState.left = bState.mid + 1;
                 } else {
                     els.binaryStatus.textContent = t.binElimRight(bState.mid);
                     for (let i = bState.mid; i <= bState.right; i++) {
-                        const c = document.getElementById(`b-${i}`);
-                        c.className = 'cell bg-slate-100 text-slate-300 border border-slate-200 opacity-40';
+                        document.getElementById(`b-${i}`).className = 'cell bg-slate-100 text-slate-400 border border-slate-200 opacity-40';
                     }
                     bState.right = bState.mid - 1;
                 }
@@ -428,18 +475,15 @@
             target = parsedTarget;
 
             if (!hasStarted) {
-                // Initial Start
                 hasStarted = true;
                 els.targetInput.disabled = true;
                 els.stepBtn.disabled = true;
-                els.startBtn.classList.replace('bg-green-500', 'bg-red-500');
-                els.startBtn.classList.replace('hover:bg-green-600', 'hover:bg-red-600');
+                els.startBtn.classList.replace('bg-slate-800', 'bg-rose-600');
+                els.startBtn.classList.replace('hover:bg-slate-700', 'hover:bg-rose-700');
                 resumeRace();
             } else if (isRunning) {
-                // Pause
                 pauseRace();
             } else {
-                // Resume
                 resumeRace();
             }
             updateLanguage();
@@ -451,27 +495,27 @@
             isRunning = false;
             isPaused = true;
             els.stepBtn.disabled = false;
-            els.startBtn.classList.replace('bg-red-500', 'bg-green-500');
-            els.startBtn.classList.replace('hover:bg-red-600', 'hover:bg-green-600');
+            els.startBtn.classList.replace('bg-rose-600', 'bg-slate-800');
+            els.startBtn.classList.replace('hover:bg-rose-700', 'hover:bg-slate-700');
         }
 
         function resumeRace() {
             isRunning = true;
             isPaused = false;
             els.stepBtn.disabled = true;
-            els.startBtn.classList.replace('bg-green-500', 'bg-red-500');
-            els.startBtn.classList.replace('hover:bg-green-600', 'hover:bg-red-600');
+            els.startBtn.classList.replace('bg-slate-800', 'bg-rose-600');
+            els.startBtn.classList.replace('hover:bg-slate-700', 'hover:bg-rose-700');
             
-            // Start intervals
+            // Adjusted timing so students can see the steps clearly
             linearTimer = setInterval(() => {
                 stepLinear();
                 if (lState.finished && bState.finished) pauseRace();
-            }, 300);
+            }, 250);
 
             binaryTimer = setInterval(() => {
                 stepBinary();
                 if (lState.finished && bState.finished) pauseRace();
-            }, 1200);
+            }, 1000);
         }
 
         function stepManual() {
@@ -489,8 +533,8 @@
         els.stepBtn.addEventListener('click', stepManual);
         els.resetBtn.addEventListener('click', () => {
             resetRace();
-            els.startBtn.classList.remove('bg-red-500', 'hover:bg-red-600');
-            els.startBtn.classList.add('bg-green-500', 'hover:bg-green-600');
+            els.startBtn.classList.remove('bg-rose-600', 'hover:bg-rose-700');
+            els.startBtn.classList.add('bg-slate-800', 'hover:bg-slate-700');
         });
 
         createGrids();
